@@ -48,5 +48,13 @@ class Controller:
             self._view.create_alert(f"Deve essre almeno 2")
             return
 
-        self._model.bestPath(num)
+        bestPath, maxCost = self._model.bestPath(num)
+        self._view.txtOut3.controls.clear()
+        self._view.txtOut3.controls.append(ft.Text(f"Peso cammino massimo: {maxCost}"))
+        for i in range(0, num):
+            self._view.txtOut3.controls.append(ft.Text(f"{bestPath[i]} --> {bestPath[i+1]}: {self._model.getPesoArco(bestPath[i], bestPath[i+1])}"))
+
+        self._view.update_page()
+
+
 

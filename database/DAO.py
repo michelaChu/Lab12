@@ -66,20 +66,27 @@ class DAO():
         return result
 
     @staticmethod
-    def getAllConnessioni(year, idMap):
+    def getAllConnessioni(year,country, idMap):
         conn = DBConnect.get_connection()
 
         result = []
 
         cursor = conn.cursor(dictionary=True)
-        query = """select gds1.Retailer_code as v0, gds2.Retailer_code as v1, count(*) as peso
-                    from go_daily_sales gds1
-                    join go_daily_sales gds2 on  gds1.Product_number = gds2.Product_number 
-                    where gds1.Retailer_code  < gds2.Retailer_code 
-                    and year(gds1.Date) = %s and year(gds1.Date) = year(gds2.Date)
-                    group by gds1.Retailer_code, gds2.Retailer_code """
+        query = """select t1.Retailer_code as v0, t2.Retailer_code as v1, count(distinct(t1.Product_number)) as peso
+                    from
+                    (select gds.Retailer_code, gds.Product_number 
+                    from go_daily_sales gds, go_retailers gr
+                    where gds.Retailer_code = gr.Retailer_code
+                    and year(gds.Date) = %s and gr.Country = %s) t1,
+                    (select gds.Retailer_code, gds.Product_number 
+                    from go_daily_sales gds, go_retailers gr
+                    where gds.Retailer_code = gr.Retailer_code
+                    and year(gds.Date) = %s and gr.Country = %s) t2
+                    where t1.Product_number = t2.Product_number
+                    and t1.Retailer_code < t2.Retailer_code
+                    group by t1.Retailer_code, t2.Retailer_code"""
 
-        cursor.execute(query, (year,))
+        cursor.execute(query, (year, country, year, country))
 
         for row in cursor:
             result.append(Connessione(idMap[int(row["v0"])],
